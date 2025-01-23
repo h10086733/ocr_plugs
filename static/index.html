@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice OCR Analysis</title>
+</head>
+<body>
+    <h1>上传发票图片进行OCR分析</h1>
+
+    <!-- 文件上传表单 -->
+    <form id="ocr-form" enctype="multipart/form-data">
+
+        <label for="file">选择文件:</label>
+        <input type="file" id="file" name="file" accept="image/*" required>
+        <br><br>
+
+        <!-- 选择OCR类型 -->
+        <!-- <label for="ocr-type">选择OCR类型:</label>
+        <select id="ocr-type" name="ocr_type" required>
+            <option value="ordinary_invoice">普通发票</option>
+            <option value="vat_invoice">增值税发票</option>
+            <option value="vat_special_invoice">增值税电子专票</option>
+            <option value="pay_invoice">微信支付宝支付</option>
+            <option value="detail_invoice">账单详情</option>
+            <option value="train_invoice">高铁票</option>
+            <option value="plane_invoice">机票</option>
+            <option value="smart_invoice">小发票联</option>
+            <option value="smart_vat_invoice">小发票联增税</option>
+        </select> -->
+        <br><br>
+
+        <button type="submit">上传并分析</button>
+    </form>
+
+    <h2>分析结果:</h2>
+    <pre id="result"></pre>
+
+    <script>
+        // 获取 HTML 元素
+        const form = document.getElementById("ocr-form");
+        const fileInput = document.getElementById("file");
+        const resultElement = document.getElementById("result");
+
+        // 提交表单时触发事件
+        form.onsubmit = async (event) => {
+            event.preventDefault();  // 防止表单自动提交
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+
+            // 发送 POST 请求上传文件，并附带ocr_type参数
+            const response = await fetch(`/ocr`, {
+                method: "POST",
+                body: formData
+            });
+
+            // 获取并显示分析结果
+            if (response.ok) {
+                const data = await response.json();
+                resultElement.textContent = JSON.stringify(data, null, 2); // 格式化并展示结果
+            } else {
+                resultElement.textContent = "文件上传失败，请重试！";
+            }
+        };
+    </script>
+</body>
+</html>
