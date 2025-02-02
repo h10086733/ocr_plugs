@@ -24,7 +24,7 @@ class Analysis:
         elif "增值税专用发票" in key:
             ocr_type = "vat_special_invoice"
         # 判断是否为增值税普通发票或增值税专用发票
-        elif "增值税普通发票" in key:
+        elif "增值税普通发票" in key or "货物或应税劳务、服务名称" in key:
             ocr_type = "vat_invoice"
         # 判断是否为普通发票
         elif key in("\n普通发票") or all(keyword in key for keyword in  ["普通发票", "电子发票"]) or "发票普发票" in key:
@@ -52,7 +52,7 @@ class Analysis:
             use_space_char=True,
             layout=True,  # 启用布局分析
             table=True,  # 启用表格识别
-            det_db_box_thresh=0.1,
+            det_db_box_thresh=0.2,
             det_db_thresh=0.1,
         )
         result = ocr.ocr(img_stream, cls=True)
