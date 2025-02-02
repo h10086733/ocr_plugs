@@ -24,7 +24,7 @@ class Analysis:
         elif "增值税专用发票" in key:
             ocr_type = "vat_special_invoice"
         # 判断是否为增值税普通发票或增值税专用发票
-        elif "增值税普通发票" in key or "货物或应税劳务、服务名称" in key:
+        elif "增值税普通发票" in key or re.search(r'服务名称', key):
             ocr_type = "vat_invoice"
         # 判断是否为普通发票
         elif key in("\n普通发票") or all(keyword in key for keyword in  ["普通发票", "电子发票"]) or "发票普发票" in key:
@@ -54,6 +54,7 @@ class Analysis:
             table=True,  # 启用表格识别
             det_db_box_thresh=0.2,
             det_db_thresh=0.1,
+            rec_model_dir='./models/ch_PP-OCRv4_rec_infer',
         )
         result = ocr.ocr(img_stream, cls=True)
         print(result)
@@ -309,7 +310,12 @@ class Analysis:
                 "价税合计大写": 价税合计大写, "价税合计小写": 价税合计小写, "开票人": 开票人}
         print(data)
         return data
-    
+    def extract_name_after_cheng(self,text):
+        # 查找 "称:" 后面的中文内容
+        match = re.search(r'称:([\u4e00-\u9fa5]+)', text)
+        if match:
+            return match.group(1)
+        return text
     def vat_invoice_analysis(self):
         # 需要合并的字段
         fileds = {"价税合计(大写)": 6, "开票人:": 4, "称:": 3,"金":4}
@@ -317,9 +323,10 @@ class Analysis:
         print(self.data)
 
         名称 = self.analysis_index(key=r"称:", direction="like")
+        print("名称",名称)
         if len(名称) == 2:
-            购买方名称 = 名称[0].split(":")[1] if len(名称[0].split(":")) > 1 else ""
-            销售方名称 = 名称[1].split(":")[1] if len(名称[1].split(":")) > 1 else ""
+            购买方名称 = self.extract_name_after_cheng(名称[0])
+            销售方名称 = self.extract_name_after_cheng(名称[1])
         else:
             销售方名称 = self.analysis_index(key="称:", direction="like", block=1)
             if len(销售方名称) == 1:
