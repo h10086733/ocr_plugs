@@ -365,6 +365,9 @@ class Analysis:
         else:
             价税合计大写 = re.sub(r'(整|分).*', r'\1', 价税合计大写[0])
 
+        if len(价税合计小写) == 0:
+            价税合计小写=self.analysis_index(key=r"^\(小写\)[￥¥]?([0-9,]+(\.\d{1,2})?)", direction="like")
+
         开票日期 = self.analysis_index(key=r'(\d{4}[年]\d{2}[月]\d{2})', direction="like")
 
         发票号码 = self.analysis_index(key="发票号码", direction="like")
