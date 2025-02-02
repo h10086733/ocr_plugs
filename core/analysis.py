@@ -257,15 +257,15 @@ class Analysis:
 
         名称 = self.analysis_index(key="称:", direction="like")
         if len(名称) == 2:
-            购买方名称 = 名称[0].split(":")[1]
-            销售方名称 = 名称[1].split(":")[1]
+            购买方名称 = self.extract_name_after_cheng(r'称:([\u4e00-\u9fa5]+)',名称[0])
+            销售方名称 = self.extract_name_after_cheng(r'称:([\u4e00-\u9fa5]+)',名称[1])
         else:
             销售方名称 = self.analysis_index(key="称:", direction="like", block=1)
             if len(销售方名称) == 1:
-                销售方名称 = [销售方名称[0].split(":")[1]]
+                销售方名称 = [self.extract_name_after_cheng(r'称:([\u4e00-\u9fa5]+)',销售方名称[0])]
             购买方名称 = self.analysis_index(key="称:", direction="like", block=3)
             if len(购买方名称) == 1:
-                购买方名称 = [购买方名称[0].split(":")[1]]
+                购买方名称 = [self.extract_name_after_cheng(r'称:([\u4e00-\u9fa5]+)',购买方名称[0])]
 
         价税合计 = self.analysis_index(key="价税合计", direction="like")
         价税合计小写, 价税合计大写 = [], []
@@ -310,9 +310,9 @@ class Analysis:
                 "价税合计大写": 价税合计大写, "价税合计小写": 价税合计小写, "开票人": 开票人}
         print(data)
         return data
-    def extract_name_after_cheng(self,text):
+    def extract_name_after_cheng(self,regex,text):
         # 查找 "称:" 后面的中文内容
-        match = re.search(r'称:([\u4e00-\u9fa5]+)', text)
+        match = re.search(regex, text)
         if match:
             return match.group(1)
         return text
@@ -322,18 +322,18 @@ class Analysis:
         self.merge_raw_data(fileds)
         print(self.data)
 
-        名称 = self.analysis_index(key=r"称:", direction="like")
+        名称 = self.analysis_index(key=r"称[:·]", direction="like")
         print("名称",名称)
         if len(名称) == 2:
-            购买方名称 = self.extract_name_after_cheng(名称[0])
-            销售方名称 = self.extract_name_after_cheng(名称[1])
+            购买方名称 = self.extract_name_after_cheng(r'称[:·]([\u4e00-\u9fa5]+)',名称[0])
+            销售方名称 = self.extract_name_after_cheng(r'称[:·]([\u4e00-\u9fa5]+)',名称[1])
         else:
             销售方名称 = self.analysis_index(key="称:", direction="like", block=1)
             if len(销售方名称) == 1:
-                销售方名称 = [销售方名称[0].split(":")[1]]
+                销售方名称 = self.extract_name_after_cheng(r'称[:·]([\u4e00-\u9fa5]+)',销售方名称[0])
             购买方名称 = self.analysis_index(key="称:", direction="like", block=3)
             if len(购买方名称) == 1:
-                购买方名称 = [购买方名称[0].split(":")[1]]
+                购买方名称 = self.extract_name_after_cheng(r'称[:·]([\u4e00-\u9fa5]+)',购买方名称[0])
 
         价税合计 = self.analysis_index(key="价税合计", direction="like")
         价税合计小写, 价税合计大写 = [], []
@@ -476,7 +476,9 @@ class Analysis:
         self.merge_raw_data(fileds)
         print(self.data)
 
-        开票日期 = self.analysis_index(key=r'(2\d{3}-?\d{2}-?\d{2})$', direction="likeOld")
+        开票日期 = self.analysis_index(key=r'(2\d{3}-?\d{2}-?\d{2})$', direction="likeOld")        
+        if len(开票日期)>0:
+            开票日期 = 开票日期[0].replace("开票日期","")
         发票号码 = self.analysis_index(key='发票号码', direction="like")
         if len(发票号码)==0:
             发票号码 = self.analysis_index(key='发票号码', direction="right")
@@ -497,11 +499,16 @@ class Analysis:
             项目 = [item for item in 项目 if "税总函" not in item]
 
         购买方名称 = self.analysis_index(key=r'购买方名称:?', direction="like")
+        if len(购买方名称)>0:
+            购买方名称 = 购买方名称[0].replace("购买方名称","")
         销售方名称 = self.analysis_index(key=r'销售方名称:?', direction="like")
         if len(销售方名称) == 0 or 销售方名称[0] == "销售方名称":
             销售方名称 = self.analysis_index(start_key=r'^销售方名称', row_index=1)
             if "纳税人" in 销售方名称:
                 销售方名称 = self.analysis_index(start_key=r'^销售方名称', row_index=-1)
+
+        if len(销售方名称)>0:
+            销售方名称 = 销售方名称[0].replace("销售方名称","")
         data = {"购买方名称": 购买方名称, "销售方名称": 销售方名称, "发票号码": 发票号码,"发票代码":发票代码, "开票日期": 开票日期,
                 "金额": 金额, "项目": 项目}
         print(data)
