@@ -193,7 +193,7 @@ class Analysis:
         """
 
         def merge(filtered_df, join_flag=True):
-            # filtered_df = filtered_df.sort_values(by=['index_2'], ascending=[True])
+            # filtered_df = filtered_df.sort_values(by=['index_2'], ascending=[False])
             if filtered_df.shape[0] >= 2:
                 indexes_list = filtered_df.index.tolist()
                 # 合并操作
@@ -318,7 +318,7 @@ class Analysis:
         return text
     def vat_invoice_analysis(self):
         # 需要合并的字段
-        fileds = {"价税合计(大写)": 6, "开票人:": 4, "称:": 3,"金":4}
+        fileds = {"价税合计(大写)": 6, "开票人:": 4, "称:": 3,"金额":None}
         self.merge_raw_data(fileds)
         print(self.data)
 
@@ -412,7 +412,7 @@ class Analysis:
     def ordinary_invoice_analysis(self):
 
         # 需要合并的字段
-        fileds = {"数量": None, "合计": None}
+        fileds = {"数量": None, "合计": None,"金额":None}
         self.merge_raw_data(fileds)
         名称 = self.analysis_index(key=r"名?称:", direction="like")
         if 名称 and len(名称) > 0:
