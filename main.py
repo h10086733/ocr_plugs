@@ -1,3 +1,4 @@
+import cv2
 from fastapi import FastAPI, File, UploadFile
 from fastapi.staticfiles import StaticFiles
 from io import BytesIO
@@ -20,8 +21,31 @@ async def ocr_analysis(file: UploadFile = File(...)):
     img_byte_stream = BytesIO(contents)
     # 将字节流转换为图片格式（PIL）
     try:
+        # img = Image.open(img_byte_stream)
+        # img = np.array(img)  # 转换为 np.ndarray 类型
+        # img = Image.open(img_byte_stream)
+        # img = np.array(img)  # 转换为 np.ndarray 类型
+
         img = Image.open(img_byte_stream)
-        img = np.array(img)  # 转换为 np.ndarray 类型
+
+        # 将 PIL 图像转换为 numpy 数组
+        img = np.array(img)
+
+        # 1. 自动方向矫正（解决手机拍摄倒置问题）
+        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)  # 注意：PIL 默认是 RGB 格式
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        coords = np.column_stack(np.where(binary > 0))
+        angle = cv2.minAreaRect(coords)[-1]
+        if angle < -45:
+            angle = -(90 + angle)
+        else:
+            angle = -angle
+        (h, w) = img.shape[:2]
+        M = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
+        img = cv2.warpAffine(img, M, (w, h), flags=cv2.INTER_CUBIC)
+        # 将图像转回 PIL 对象（如果需要继续处理为 PIL 图像）
+        img = Image.fromarray(img)
+        img = np.array(img)
     except Exception as e:
         return {"error": f"Failed to process image: {str(e)}"}
 
